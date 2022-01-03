@@ -1,0 +1,14 @@
+{
+  reportDir target/detangled/
+  searchPaths [
+    console/target/class-conflict.jar
+  ]
+  level 2
+  startsWith {
+    include [[com seanshubin classconflict]]
+    drop [[com seanshubin classconflict]]
+    exclude []
+  }
+  allowedInCycle []
+  canFailBuild true
+}
