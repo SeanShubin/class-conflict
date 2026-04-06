@@ -1,100 +1,66 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <!-- The Basics -->
     <groupId>com.seanshubin.classconflict</groupId>
-    <artifactId>class-conflict</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>classconflict-parent</artifactId>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
     <dependencies>
         <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
-            <scope>test</scope>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit</artifactId>
         </dependency>
     </dependencies>
-    <!--<parent>...</parent>-->
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.seanshubin.classconflict</groupId>
-                <artifactId>class-conflict-contract</artifactId>
-                <version>${project.version}</version>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib-jdk8</artifactId>
+                <version>2.3.20</version>
             </dependency>
             <dependency>
-                <groupId>com.seanshubin.classconflict</groupId>
-                <artifactId>class-conflict-contract-test</artifactId>
-                <version>${project.version}</version>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-test-junit</artifactId>
+                <version>2.3.20</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-library</artifactId>
-                <version>2.12.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scalatest</groupId>
-                <artifactId>scalatest_2.11</artifactId>
-                <version>3.0.1</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-plugin-api</artifactId>
-                <version>3.3.9</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.plugin-tools</groupId>
-                <artifactId>maven-plugin-annotations</artifactId>
-                <version>3.5</version>
-                <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
     <modules>
-        <module>domain</module>
         <module>console</module>
-        <module>contract</module>
-        <module>contract-test</module>
-        <module>maven-plugin</module>
+        <module>composition</module>
+        <module>domain-api</module>
+        <module>domain-impl</module>
+        <module>domain-test</module>
+        <module>di-contract</module>
+        <module>di-delegate</module>
+        <module>di-test</module>
+        <module>zip</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <!-- Build Settings -->
     <build>
-        <sourceDirectory>src/main/scala</sourceDirectory>
-        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
-                <groupId>org.scala-tools</groupId>
-                <artifactId>maven-scala-plugin</artifactId>
-                <version>2.15.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
                 <configuration>
-                    <sourceDir>src/main/java</sourceDir>
-                    <jvmArgs>
-                        <jvmArg>-Xms64m</jvmArg>
-                        <jvmArg>-Xmx1024m</jvmArg>
-                    </jvmArgs>
-                    <args>
-                        <arg>-unchecked</arg>
-                        <arg>-deprecation</arg>
-                    </args>
+                    <source>25</source>
+                    <target>25</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.1.2</version>
+                <version>3.4.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -106,60 +72,112 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- disable surefire -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.7</version>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>2.3.20</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
-                    <skipTests>true</skipTests>
+                    <jvmTarget>25</jvmTarget>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.seanshubin.code.structure</groupId>
+                <artifactId>code-structure-maven</artifactId>
+                <version>1.1.1</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>analyze</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configBaseName>code-structure</configBaseName>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.10.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
                 </configuration>
             </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <!-- enable scalatest -->
-                <plugin>
-                    <groupId>org.scalatest</groupId>
-                    <artifactId>scalatest-maven-plugin</artifactId>
-                    <version>1.0</version>
-                    <configuration>
-                        <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-                        <junitxml>.</junitxml>
-                        <filereports>WDF TestSuite.txt</filereports>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>test</id>
-                            <goals>
-                                <goal>test</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
-    <!--<reporting>...</reporting>-->
-
-    <!-- More Project Information -->
     <name>${project.groupId}:${project.artifactId}</name>
-    <!--<description>...</description>-->
-    <!--<url>...</url>-->
-    <!--<inceptionYear>...</inceptionYear>-->
-    <!--<licenses>...</licenses>-->
-    <!--<organization>...</organization>-->
-    <!--<developers>...</developers>-->
-    <!--<contributors>...</contributors>-->
-
-    <!-- Environment Settings -->
-    <!--<issueManagement>...</issueManagement>-->
-    <!--<ciManagement>...</ciManagement>-->
-    <!--<mailingLists>...</mailingLists>-->
-    <!--<scm>...</scm>-->
-    <!--<prerequisites>...</prerequisites>-->
-    <!--<repositories>...</repositories>-->
-    <!--<pluginRepositories>...</pluginRepositories>-->
-    <!--<distributionManagement>...</distributionManagement>-->
-    <!--<profiles>...</profiles>-->
+    <description>Scans Maven artifacts for class files with the same fully qualified name but different bytecode</description>
+    <url>https://github.com/SeanShubin/classconflict</url>
+    <licenses>
+        <license>
+            <name>Unlicense</name>
+            <url>http://unlicense.org/</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Sean Shubin</name>
+            <organization>Sean Shubin</organization>
+            <organizationUrl>http://seanshubin.com/</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>git@github.com:SeanShubin/classconflict.git</connection>
+        <developerConnection>git@github.com:SeanShubin/classconflict.git</developerConnection>
+        <url>https://github.com/SeanShubin/classconflict</url>
+    </scm>
+    <profiles>
+        <profile>
+            <id>stage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.jetbrains.dokka</groupId>
+                        <artifactId>dokka-maven-plugin</artifactId>
+                        <version>2.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>generate-dokka-javadoc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>javadocJar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

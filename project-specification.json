@@ -1,0 +1,79 @@
+{
+  "prefix": [
+    "com",
+    "seanshubin"
+  ],
+  "name": [
+    "classconflict"
+  ],
+  "description": "Scans Maven artifacts for class files with the same fully qualified name but different bytecode",
+  "version": "1.0.0",
+  "language": "kotlin",
+  "developer": {
+    "name": "Sean Shubin",
+    "githubName": "SeanShubin",
+    "mavenUserName": "SeanShubin",
+    "organization": "Sean Shubin",
+    "url": "http://seanshubin.com/"
+  },
+  "dependencies": {
+    "stdlib": {
+      "group": "org.jetbrains.kotlin",
+      "artifact": "kotlin-stdlib-jdk8"
+    },
+    "test": {
+      "group": "org.jetbrains.kotlin",
+      "artifact": "kotlin-test-junit",
+      "scope": "test"
+    }
+  },
+  "global": [
+    "stdlib",
+    "test"
+  ],
+  "modules": {
+    "console": [
+      "composition"
+    ],
+    "composition": [
+      "domain-api",
+      "domain-impl",
+      "di-delegate"
+    ],
+    "domain-api": [
+      "di-contract"
+    ],
+    "domain-impl": [
+      "domain-api",
+      "zip"
+    ],
+    "domain-test": [
+      "domain-api",
+      "di-test"
+    ],
+    "di-contract": [],
+    "di-delegate": [
+      "di-contract"
+    ],
+    "di-test": [
+      "di-contract"
+    ],
+    "zip": []
+  },
+  "entryPoints": {
+    "console": "com.seanshubin.classconflict.console.MainKt"
+  },
+  "sourceDependencies": [
+    {
+      "sourceProjectPath": "/Users/seashubi/github.com/SeanShubin/kotlin-reusable",
+      "moduleMapping": {
+        "di-contract": "di-contract",
+        "di-delegate": "di-delegate",
+        "di-test": "di-test",
+        "zip": "zip"
+      }
+    }
+  ],
+  "javaVersion": "25",
+  "exports": []
+}
