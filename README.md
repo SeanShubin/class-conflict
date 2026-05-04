@@ -27,23 +27,56 @@ mvn clean package
 ## Usage
 
 ```bash
-java -jar console/target/classconflict-console.jar [--output-dir <dir>] <artifact1> [artifact2] [artifact3] ...
+java -jar console/target/classconflict-console.jar [config-name]
 ```
 
-### Options
+Where `config-name` defaults to `class-conflict` if not provided.
 
-- `--output-dir <dir>`: Directory for detailed reports (default: `generated/class-conflict`)
+### Configuration
 
-### Example
+The tool uses a configuration file named `<config-name>-config.json`. On first run, it will be created with defaults if it doesn't exist.
 
+Example `class-conflict-config.json`:
+```json
+{
+  "_documentation" : {
+    "description" : "Scans Maven artifacts for class files with the same fully qualified name but different bytecode",
+    "readme" : "https://github.com/SeanShubin/class-conflict/blob/master/README.md",
+    "configHelp" : "class-conflict-documentation.json"
+  },
+  "inputDir" : "lib",
+  "outputDir" : "generated/class-conflict",
+  "artifactFileRegexPatterns" : {
+    "include" : [ ".*\\.jar", ".*\\.zip" ],
+    "exclude" : [ ".*-sources\\.jar", ".*-javadoc\\.jar" ]
+  }
+}
+```
+
+The tool scans `inputDir` recursively for files matching the include patterns, then excludes files matching the exclude patterns.
+
+### Configuration Options
+
+- `inputDir`: Directory to scan for artifacts (default: current directory)
+- `outputDir`: Directory for detailed reports
+- `artifactFileRegexPatterns.include`: Include only files matching these regex patterns (default: `.*\.jar`, `.*\.zip`)
+- `artifactFileRegexPatterns.exclude`: Exclude files matching these regex patterns (default: none)
+
+### Examples
+
+Basic usage with default config:
 ```bash
-java -jar console/target/classconflict-console.jar app.jar lib1.jar lib2.jar
+java -jar console/target/classconflict-console.jar
+# Uses class-conflict-config.json
 ```
 
-With custom output directory:
+Using a custom config:
 ```bash
-java -jar console/target/classconflict-console.jar --output-dir build/reports app.jar lib1.jar lib2.jar
+java -jar console/target/classconflict-console.jar my-project
+# Uses my-project-config.json and my-project-documentation.json
 ```
+
+The documentation file (`<config-name>-documentation.json`) is automatically generated and describes each configuration option with its default value and purpose.
 
 ### Output Structure
 
@@ -81,6 +114,42 @@ Human-readable text files:
 - `summary.txt`: Overview grouped by package
 - `conflict-<classname>.txt`: Detailed analysis for each conflict with resolution guidance
 
+### Filtering Artifacts
+
+The tool scans `inputDir` recursively and applies regex-based filtering:
+
+- **Include patterns**: Only files matching at least one include pattern are scanned (default: `.*\.jar` and `.*\.zip`)
+- **Exclude patterns**: Files matching any exclude pattern are skipped (default: empty)
+- **Logic**: A file is scanned if it matches an include pattern AND does not match any exclude pattern
+
+Example configurations:
+
+Scan all JARs in lib directory, excluding test JARs:
+```json
+{
+  "inputDir" : "lib",
+  "outputDir" : "generated/class-conflict",
+  "artifactFileRegexPatterns" : {
+    "include" : [ ".*\\.jar" ],
+    "exclude" : [ ".*-tests\\.jar" ]
+  }
+}
+```
+
+Scan target directory for production artifacts only:
+```json
+{
+  "inputDir" : "target",
+  "outputDir" : "generated/class-conflict",
+  "artifactFileRegexPatterns" : {
+    "include" : [ ".*\\.jar" ],
+    "exclude" : [ ".*-sources\\.jar", ".*-javadoc\\.jar", ".*-tests\\.jar" ]
+  }
+}
+```
+
+Patterns are applied to file paths relative to `inputDir`.
+
 ### Exit Codes
 
 - `0`: No conflicts found
@@ -115,15 +184,26 @@ Detailed reports written to:
 
 ### CI/CD Integration
 
-Check the exit code and parse `count/quality-metrics.json`:
+1. Create a `class-conflict-config.json` in your project:
+```json
+{
+  "inputDir" : "target",
+  "outputDir" : "build/class-conflict-reports",
+  "artifactFileRegexPatterns" : {
+    "include" : [ ".*\\.jar" ],
+    "exclude" : [ ".*-sources\\.jar", ".*-javadoc\\.jar" ]
+  }
+}
+```
 
+2. Run the scanner and check the exit code:
 ```bash
-java -jar classconflict-console.jar *.jar
+java -jar classconflict-console.jar
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Class conflicts detected!"
-  cat generated/class-conflict/count/quality-metrics.json
+  cat build/class-conflict-reports/count/quality-metrics.json
   exit 1
 fi
 ```
@@ -147,13 +227,14 @@ Add to your build process:
                 <arguments>
                     <argument>-jar</argument>
                     <argument>${project.basedir}/tools/classconflict-console.jar</argument>
-                    <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
                 </arguments>
             </configuration>
         </execution>
     </executions>
 </plugin>
 ```
+
+Then create `class-conflict-config.json` in your project root with the artifacts to scan.
 
 ## Architecture
 

@@ -6,28 +6,36 @@ import java.nio.file.Path
 class ClassConflictDetectorImpl(
     private val classScanner: ClassScanner
 ) : ClassConflictDetector {
-    override fun detectConflicts(artifacts: List<Path>): ClassConflictReport {
-        val allClasses = artifacts.flatMap { artifact ->
+    override fun detectConflicts(configuration: Configuration, artifacts: List<Path>): ClassConflictReport {
+        val scannedClasses = artifacts.flatMap { artifact ->
             classScanner.scanArtifact(artifact).map { scannedClass ->
-                ClassInstance(artifact, scannedClass.hash) to scannedClass.fullyQualifiedName
+                ScannedClass(
+                    fullyQualifiedName = scannedClass.fullyQualifiedName,
+                    artifact = artifact,
+                    hash = scannedClass.hash
+                )
             }
-        }
+        }.sortedBy { it.fullyQualifiedName }
 
-        val groupedByName = allClasses.groupBy({ it.second }, { it.first })
+        val groupedByName = scannedClasses.groupBy { it.fullyQualifiedName }
 
         val conflicts = groupedByName
             .filter { (_, instances) -> instances.map { it.hash }.distinct().size > 1 }
             .map { (name, instances) ->
                 ClassConflict(
                     fullyQualifiedName = name,
-                    instances = instances.distinctBy { "${it.artifact}:${it.hash}" }
+                    instances = instances.map {
+                        ClassInstance(it.artifact, it.hash)
+                    }.distinctBy { "${it.artifact}:${it.hash}" }
                 )
             }
             .sortedBy { it.fullyQualifiedName }
 
         return ClassConflictReport(
-            conflicts = conflicts,
-            classesScanned = groupedByName.size
+            configuration = configuration,
+            artifacts = artifacts,
+            allClasses = scannedClasses,
+            conflicts = conflicts
         )
     }
 }

@@ -25,6 +25,14 @@
       "group": "org.jetbrains.kotlin",
       "artifact": "kotlin-test-junit",
       "scope": "test"
+    },
+    "jackson": {
+      "group": "com.fasterxml.jackson.module",
+      "artifact": "jackson-module-kotlin"
+    },
+    "jackson-time": {
+      "group": "com.fasterxml.jackson.datatype",
+      "artifact": "jackson-datatype-jsr310"
     }
   },
   "global": [
@@ -38,14 +46,17 @@
     "composition": [
       "domain-api",
       "domain-impl",
-      "di-delegate"
+      "di-delegate",
+      "dynamic-core",
+      "dynamic-json"
     ],
     "domain-api": [
       "di-contract"
     ],
     "domain-impl": [
       "domain-api",
-      "zip"
+      "zip",
+      "html"
     ],
     "domain-test": [
       "domain-api",
@@ -58,7 +69,15 @@
     "di-test": [
       "di-contract"
     ],
-    "zip": []
+    "zip": [],
+    "html": [],
+    "dynamic-core": [],
+    "dynamic-json": [
+      "dynamic-core",
+      "di-delegate",
+      "jackson",
+      "jackson-time"
+    ]
   },
   "entryPoints": {
     "console": "com.seanshubin.classconflict.console.MainKt"
@@ -70,7 +89,10 @@
         "di-contract": "di-contract",
         "di-delegate": "di-delegate",
         "di-test": "di-test",
-        "zip": "zip"
+        "zip": "zip",
+        "html": "html",
+        "dynamic-core": "dynamic-core",
+        "dynamic-json": "dynamic-json"
       }
     }
   ],

@@ -18,6 +18,16 @@
             <artifactId>classconflict-di-delegate</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.seanshubin.classconflict</groupId>
+            <artifactId>classconflict-dynamic-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.seanshubin.classconflict</groupId>
+            <artifactId>classconflict-dynamic-json</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <parent>
         <groupId>com.seanshubin.classconflict</groupId>

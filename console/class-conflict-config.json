@@ -1,0 +1,13 @@
+{
+  "_documentation" : {
+    "description" : "Scans Maven artifacts for class files with the same fully qualified name but different bytecode",
+    "readme" : "https://github.com/SeanShubin/class-conflict/blob/master/README.md",
+    "configHelp" : "class-conflict-documentation.json"
+  },
+  "inputDir" : ".",
+  "outputDir" : "generated/class-conflict",
+  "artifactFileRegexPatterns" : {
+    "include" : [ ".*\\.jar", ".*\\.zip" ],
+    "exclude" : [ ]
+  }
+}

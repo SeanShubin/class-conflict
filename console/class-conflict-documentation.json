@@ -1,0 +1,13 @@
+{
+  "_documentation" : {
+    "description" : [ "path: _documentation.description", "default value: Scans Maven artifacts for class files with the same fully qualified name but different bytecode", "default value type: String", "Purpose: Detect class conflicts before they cause runtime issues" ],
+    "readme" : [ "path: _documentation.readme", "default value: https://github.com/SeanShubin/class-conflict/blob/master/README.md", "default value type: String", "Documentation link" ],
+    "configHelp" : [ "path: _documentation.configHelp", "default value: class-conflict-documentation.json", "default value type: String", "Configuration help file" ]
+  },
+  "inputDir" : [ "path: inputDir", "default value: .", "default value type: String", "Directory to scan for artifact files", "Scanned recursively for files matching include patterns", "Default: current working directory (.)" ],
+  "outputDir" : [ "path: outputDir", "default value: generated/class-conflict", "default value type: String", "Directory for detailed reports (count, diff, browse)" ],
+  "artifactFileRegexPatterns" : {
+    "include" : [ "path: artifactFileRegexPatterns.include", "default value: [.*\\.jar, .*\\.zip]", "default value type: ArrayList", "Include only artifacts matching these regex patterns", "Default: .*\\.jar and .*\\.zip to match all JAR and ZIP files" ],
+    "exclude" : [ "path: artifactFileRegexPatterns.exclude", "default value: []", "default value type: EmptyList", "Exclude artifacts matching these regex patterns", "Default: empty list (no exclusions)", "Example: [ \".*-sources\\.jar\", \".*-tests\\.jar\" ]" ]
+  }
+}

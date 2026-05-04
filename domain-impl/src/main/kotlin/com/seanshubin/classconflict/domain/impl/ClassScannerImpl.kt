@@ -24,7 +24,7 @@ class ClassScannerImpl : ClassScanner {
             for (zipContents in iterator) {
                 val fullyQualifiedName = extractClassName(zipContents.zipEntry.name)
                 val hash = computeHash(zipContents.bytes)
-                classes.add(ScannedClass(fullyQualifiedName, hash))
+                classes.add(ScannedClass(fullyQualifiedName, artifact, hash))
             }
         }
         return classes
