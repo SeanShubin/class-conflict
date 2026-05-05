@@ -28,6 +28,11 @@
             <artifactId>classconflict-dynamic-json</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.seanshubin.classconflict</groupId>
+            <artifactId>classconflict-file-selection</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <parent>
         <groupId>com.seanshubin.classconflict</groupId>

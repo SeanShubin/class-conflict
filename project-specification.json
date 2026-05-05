@@ -48,7 +48,8 @@
       "domain-impl",
       "di-delegate",
       "dynamic-core",
-      "dynamic-json"
+      "dynamic-json",
+      "file-selection"
     ],
     "domain-api": [
       "di-contract"
@@ -77,7 +78,8 @@
       "di-delegate",
       "jackson",
       "jackson-time"
-    ]
+    ],
+    "file-selection": ["di-contract"]
   },
   "entryPoints": {
     "console": "com.seanshubin.classconflict.console.MainKt"
@@ -92,7 +94,8 @@
         "zip": "zip",
         "html": "html",
         "dynamic-core": "dynamic-core",
-        "dynamic-json": "dynamic-json"
+        "dynamic-json": "dynamic-json",
+        "file-selection": "file-selection"
       }
     }
   ],

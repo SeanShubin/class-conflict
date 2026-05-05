@@ -1,17 +1,16 @@
 package com.seanshubin.classconflict.composition
 
 import com.seanshubin.classconflict.domain.api.ClassConflictDetector
-import com.seanshubin.classconflict.domain.api.Configuration
 import com.seanshubin.classconflict.domain.api.ReportFormatter
 import com.seanshubin.classconflict.domain.api.ReportWriter
-import com.seanshubin.classconflict.domain.impl.ArtifactFilter
+import com.seanshubin.classconflict.fileselection.FileChooser
+import com.seanshubin.classconflict.fileselection.FileSelection
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.streams.toList
 
 class Application(
     private val integrations: Integrations,
+    private val fileChooser: FileChooser,
     private val classConflictDetector: ClassConflictDetector,
     private val reportFormatter: ReportFormatter,
     private val reportWriter: ReportWriter
@@ -37,16 +36,13 @@ class Application(
             return 1
         }
 
-        val artifactFilter = ArtifactFilter(
-            inputDir,
-            config.artifactFileRegexPatterns.include,
-            config.artifactFileRegexPatterns.exclude
+        val discoveredArtifacts = fileChooser.choose(
+            FileSelection(
+                baseDir = inputDir,
+                includePatterns = config.artifactFileRegexPatterns.include,
+                excludePatterns = config.artifactFileRegexPatterns.exclude
+            )
         )
-
-        val discoveredArtifacts = Files.walk(inputDir)
-            .filter { Files.isRegularFile(it) }
-            .filter { artifactFilter(it) }
-            .toList()
 
         if (discoveredArtifacts.isEmpty()) {
             integrations.emitLine("No artifacts found in: $inputDir")
