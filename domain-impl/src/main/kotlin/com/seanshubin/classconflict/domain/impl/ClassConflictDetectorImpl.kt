@@ -1,6 +1,7 @@
 package com.seanshubin.classconflict.domain.impl
 
 import com.seanshubin.classconflict.domain.api.*
+import java.nio.file.Files
 import java.nio.file.Path
 
 class ClassConflictDetectorImpl(
@@ -8,10 +9,11 @@ class ClassConflictDetectorImpl(
 ) : ClassConflictDetector {
     override fun detectConflicts(configuration: Configuration, artifacts: List<Path>): ClassConflictReport {
         val scannedClasses = artifacts.flatMap { artifact ->
+            val relativeArtifact = configuration.inputDir.relativize(artifact)
             classScanner.scanArtifact(artifact).map { scannedClass ->
                 ScannedClass(
                     fullyQualifiedName = scannedClass.fullyQualifiedName,
-                    artifact = artifact,
+                    artifact = relativeArtifact,
                     hash = scannedClass.hash
                 )
             }
@@ -33,7 +35,7 @@ class ClassConflictDetectorImpl(
 
         return ClassConflictReport(
             configuration = configuration,
-            artifacts = artifacts,
+            artifacts = artifacts.map { configuration.inputDir.relativize(it) },
             allClasses = scannedClasses,
             conflicts = conflicts
         )

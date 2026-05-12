@@ -10,4 +10,29 @@ data class ClassConflictReport(
 ) {
     val hasConflicts: Boolean get() = conflicts.isNotEmpty()
     val classesScanned: Int get() = allClasses.size
+    val conflictingVersionsFound: Int
+        get() = conflicts.sumOf { conflict -> conflict.instances.map { it.hash }.distinct().size }
+    val conflictGroups: List<ConflictGroup>
+        get() = conflicts
+            .groupBy { conflict ->
+                conflict.instances.map { it.artifact }.distinct().sortedBy { it.toString() }
+            }
+            .map { (artifacts, conflictsInGroup) ->
+                ConflictGroup(
+                    artifacts = artifacts,
+                    conflicts = conflictsInGroup
+                        .sortedBy { it.fullyQualifiedName }
+                        .map { conflict ->
+                            conflict.copy(
+                                instances = conflict.instances.sortedWith(
+                                    compareBy({ it.hash }, { it.artifact.toString() })
+                                )
+                            )
+                        }
+                )
+            }
+            .sortedWith(
+                compareByDescending<ConflictGroup> { it.conflicts.size }
+                    .thenBy { it.artifacts.first().toString() }
+            )
 }

@@ -5,7 +5,6 @@ import com.seanshubin.classconflict.domain.api.ScannedClass
 import com.seanshubin.classconflict.zip.ZipContentsIterator
 import java.nio.file.Files
 import java.nio.file.Path
-import java.security.MessageDigest
 
 class ClassScannerImpl : ClassScanner {
     override fun scanArtifact(artifact: Path): List<ScannedClass> {
@@ -18,12 +17,18 @@ class ClassScannerImpl : ClassScanner {
                 inputStream = inputStream,
                 name = artifact.fileName.toString(),
                 isZip = { name -> name.endsWith(".jar") || name.endsWith(".zip") },
-                accept = { _, entry -> !entry.isDirectory && entry.name.endsWith(".class") }
+                accept = { _, entry ->
+                    !entry.isDirectory &&
+                        entry.name.endsWith(".class") &&
+                        !entry.name.startsWith("META-INF/") &&
+                        entry.name != "module-info.class"
+                },
+                loadBytes = false
             )
 
             for (zipContents in iterator) {
                 val fullyQualifiedName = extractClassName(zipContents.zipEntry.name)
-                val hash = computeHash(zipContents.bytes)
+                val hash = "%08x".format(zipContents.zipEntry.crc)
                 classes.add(ScannedClass(fullyQualifiedName, artifact, hash))
             }
         }
@@ -41,10 +46,4 @@ class ClassScannerImpl : ClassScanner {
             .replace('/', '.')
     }
 
-    private fun computeHash(bytes: List<Byte>): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val byteArray = bytes.toByteArray()
-        val hashBytes = digest.digest(byteArray)
-        return hashBytes.joinToString("") { "%02x".format(it) }
-    }
 }

@@ -1,9 +1,8 @@
 package com.seanshubin.classconflict.domain.impl
 
-import com.seanshubin.classconflict.domain.api.ClassConflict
 import com.seanshubin.classconflict.domain.api.ClassConflictReport
+import com.seanshubin.classconflict.domain.api.ConflictGroup
 import com.seanshubin.classconflict.domain.api.ReportWriter
-import com.seanshubin.classconflict.domain.api.ScannedClass
 import com.seanshubin.classconflict.html.HtmlElement
 import com.seanshubin.classconflict.html.HtmlElement.Tag
 import com.seanshubin.classconflict.html.HtmlElement.Text
@@ -28,7 +27,8 @@ class ReportWriterImpl : ReportWriter {
         val json = buildString {
             appendLine("{")
             appendLine("  \"classesScanned\" : ${report.classesScanned},")
-            appendLine("  \"conflictsFound\" : ${report.conflicts.size}")
+            appendLine("  \"conflictGroupsFound\" : ${report.conflictGroups.size},")
+            appendLine("  \"conflictingVersionsFound\" : ${report.conflictingVersionsFound}")
             appendLine("}")
         }
 
@@ -39,25 +39,63 @@ class ReportWriterImpl : ReportWriter {
     private fun writeDiffReports(report: ClassConflictReport, outputDir: Path) {
         val diffDir = outputDir.resolve("diff")
         Files.createDirectories(diffDir)
-
-        for (conflict in report.conflicts) {
-            val json = formatConflictAsJson(conflict)
-            val fileName = "conflict-${conflict.fullyQualifiedName}.json"
-            val diffFile = diffDir.resolve(fileName)
-            Files.writeString(diffFile, json)
-        }
+        val json = formatGroupsAsJson(report.conflictGroups)
+        Files.writeString(diffDir.resolve("quality-metrics-conflictGroups.json"), json)
     }
+
+    private data class ArtifactStats(val artifact: Path, val groupCount: Int, val classCount: Int)
 
     private fun writeBrowseReports(report: ClassConflictReport, outputDir: Path) {
         val browseDir = outputDir.resolve("browse")
         Files.createDirectories(browseDir)
 
+        val groupsByArtifact: Map<Path, List<ConflictGroup>> = report.conflictGroups
+            .flatMap { group -> group.artifacts.map { artifact -> artifact to group } }
+            .groupBy({ it.first }, { it.second })
+
+        val sortedStats: List<ArtifactStats> = report.artifacts.map { artifact ->
+            val groups = groupsByArtifact[artifact] ?: emptyList()
+            ArtifactStats(artifact, groups.size, groups.sumOf { it.conflicts.size })
+        }.sortedWith(
+            compareByDescending<ArtifactStats> { it.groupCount }
+                .thenByDescending { it.classCount }
+                .thenBy { it.artifact.toString() }
+        )
+
+        val artifactIndex: Map<Path, Int> = sortedStats
+            .filter { it.groupCount > 0 }
+            .mapIndexed { i, s -> s.artifact to (i + 1) }
+            .toMap()
+
+        val groupNumbers: Map<ConflictGroup, Int> = report.conflictGroups
+            .mapIndexed { i, group -> group to (i + 1) }
+            .toMap()
+
         writeStaticContent(browseDir)
+        writeIndexRedirect(browseDir)
         writeIndexPage(report, browseDir)
-        writeArtifactsPage(report, browseDir)
-        writeClassesPage(report, browseDir)
+        writeArtifactsPage(sortedStats, artifactIndex, browseDir)
+        writeClassVersionsPage(report, browseDir)
         writeConflictsSummaryPage(report, browseDir)
         writeConflictDetailPages(report, browseDir)
+        writeArtifactDetailPages(artifactIndex, groupsByArtifact, groupNumbers, browseDir)
+    }
+
+    private fun writeIndexRedirect(browseDir: Path) {
+        val content = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="refresh" content="0; url=index.html">
+                <title>Redirecting...</title>
+            </head>
+            <body>
+            <p>Redirecting to <a href="index.html">index.html</a>...</p>
+            </body>
+            </html>
+        """.trimIndent()
+        Files.writeString(browseDir.resolve("_index.html"), content)
     }
 
     private fun writeStaticContent(browseDir: Path) {
@@ -104,7 +142,8 @@ class ReportWriterImpl : ReportWriter {
                     "tbody",
                     Tag("tr", Tag("td", Text("Artifacts Scanned")), Tag("td", Text("${report.artifacts.size}"))),
                     Tag("tr", Tag("td", Text("Classes Scanned")), Tag("td", Text("${report.classesScanned}"))),
-                    Tag("tr", Tag("td", Text("Conflicts Found")), Tag("td", Text("${report.conflicts.size}")))
+                    Tag("tr", Tag("td", Text("Conflict Groups Found")), Tag("td", Text("${report.conflictGroups.size}"))),
+                    Tag("tr", Tag("td", Text("Conflicting Versions Found")), Tag("td", Text("${report.conflictingVersionsFound}")))
                 )
             ),
             Tag("h2", Text("Reports")),
@@ -112,8 +151,8 @@ class ReportWriterImpl : ReportWriter {
                 "div",
                 listOf(
                     HtmlUtil.anchor("Artifacts (${report.artifacts.size})", "artifacts.html"),
-                    HtmlUtil.anchor("Classes (${report.classesScanned})", "classes.html"),
-                    HtmlUtil.anchor("Conflicts (${report.conflicts.size})", "conflicts.html")
+                    HtmlUtil.anchor("Class Versions (${report.conflicts.size})", "class-versions.html"),
+                    HtmlUtil.anchor("Conflict Groups (${report.conflictGroups.size})", "conflicts.html")
                 ),
                 listOf("class" to "column-1")
             )
@@ -123,16 +162,29 @@ class ReportWriterImpl : ReportWriter {
         Files.write(browseDir.resolve("index.html"), html.toLines())
     }
 
-    private fun writeArtifactsPage(report: ClassConflictReport, browseDir: Path) {
+    private fun writeArtifactsPage(
+        sortedStats: List<ArtifactStats>,
+        artifactIndex: Map<Path, Int>,
+        browseDir: Path
+    ) {
         val body = Tag(
             "body",
             Tag("h1", Text("Artifacts")),
             Tag("p", HtmlUtil.anchor("Table Of Contents", "index.html")),
-            Tag("p", Text("artifact count: ${report.artifacts.size}")),
-            *HtmlUtil.createTableWithText(
-                report.artifacts,
-                listOf("Artifact Path"),
-                { artifact -> listOf(artifact.toString()) }
+            Tag("p", Text("artifact count: ${sortedStats.size}")),
+            *HtmlUtil.createTableWithElements(
+                sortedStats,
+                listOf("Artifact", "Conflict Groups", "Conflicting Classes"),
+                { stats ->
+                    val artifactCell = artifactIndex[stats.artifact]?.let { idx ->
+                        HtmlUtil.anchor(stats.artifact.toString(), "artifact-$idx.html")
+                    } ?: Text(stats.artifact.toString())
+                    listOf(
+                        artifactCell,
+                        Text("${stats.groupCount}"),
+                        Text("${stats.classCount}")
+                    )
+                }
             ).toTypedArray()
         )
 
@@ -140,46 +192,97 @@ class ReportWriterImpl : ReportWriter {
         Files.write(browseDir.resolve("artifacts.html"), html.toLines())
     }
 
-    private fun writeClassesPage(report: ClassConflictReport, browseDir: Path) {
+    private fun writeArtifactDetailPages(
+        artifactIndex: Map<Path, Int>,
+        groupsByArtifact: Map<Path, List<ConflictGroup>>,
+        groupNumbers: Map<ConflictGroup, Int>,
+        browseDir: Path
+    ) {
+        for ((artifact, idx) in artifactIndex) {
+            val groups = (groupsByArtifact[artifact] ?: emptyList())
+                .sortedBy { groupNumbers[it]!! }
+            val body = Tag(
+                "body",
+                Tag("h1", Text("Artifact: $artifact")),
+                Tag("p", HtmlUtil.anchor("Artifacts", "artifacts.html")),
+                Tag("p", Text("conflict groups: ${groups.size}")),
+                *HtmlUtil.createTableWithElements(
+                    groups,
+                    listOf("Conflict Group", "Conflicting Classes"),
+                    { group ->
+                        val groupNum = groupNumbers[group]!!
+                        listOf(
+                            HtmlUtil.anchor("Group $groupNum", "conflict-group-$groupNum.html"),
+                            Text("${group.conflicts.size}")
+                        )
+                    }
+                ).toTypedArray()
+            )
+
+            val html = createHtmlPage("Artifact: $artifact", body)
+            Files.write(browseDir.resolve("artifact-$idx.html"), html.toLines())
+        }
+    }
+
+    private fun writeClassVersionsPage(report: ClassConflictReport, browseDir: Path) {
+        data class ClassVersionCount(val className: String, val versionCount: Int, val groupNumber: Int)
+
+        val classToGroupNumber: Map<String, Int> = report.conflictGroups
+            .flatMapIndexed { index, group ->
+                group.conflicts.map { conflict -> conflict.fullyQualifiedName to (index + 1) }
+            }
+            .toMap()
+
+        val rows = report.conflicts
+            .map { conflict ->
+                ClassVersionCount(
+                    conflict.fullyQualifiedName,
+                    conflict.instances.map { it.hash }.distinct().size,
+                    classToGroupNumber.getValue(conflict.fullyQualifiedName)
+                )
+            }
+            .sortedWith(
+                compareByDescending<ClassVersionCount> { it.versionCount }
+                    .thenBy { it.className }
+            )
+
         val body = Tag(
             "body",
-            Tag("h1", Text("Classes")),
+            Tag("h1", Text("Class Versions")),
             Tag("p", HtmlUtil.anchor("Table Of Contents", "index.html")),
-            Tag("p", Text("class count: ${report.allClasses.size}")),
-            *HtmlUtil.createTableWithText(
-                report.allClasses,
-                listOf("Fully Qualified Name", "Artifact", "SHA-256 Hash"),
-                { scannedClass ->
+            Tag("p", Text("conflicting class count: ${rows.size}")),
+            *HtmlUtil.createTableWithElements(
+                rows,
+                listOf("Class", "Versions", "Conflict Group"),
+                { row ->
                     listOf(
-                        scannedClass.fullyQualifiedName,
-                        scannedClass.artifact.fileName.toString(),
-                        scannedClass.hash
+                        Text(row.className),
+                        Text("${row.versionCount}"),
+                        HtmlUtil.anchor("Group ${row.groupNumber}", "conflict-group-${row.groupNumber}.html")
                     )
                 }
             ).toTypedArray()
         )
 
-        val html = createHtmlPage("Classes", body)
-        Files.write(browseDir.resolve("classes.html"), html.toLines())
+        val html = createHtmlPage("Class Versions", body)
+        Files.write(browseDir.resolve("class-versions.html"), html.toLines())
     }
 
     private fun writeConflictsSummaryPage(report: ClassConflictReport, browseDir: Path) {
         val body = if (report.hasConflicts) {
             Tag(
                 "body",
-                Tag("h1", Text("Conflicts")),
+                Tag("h1", Text("Conflict Groups")),
                 Tag("p", HtmlUtil.anchor("Table Of Contents", "index.html")),
-                Tag("p", Text("conflict count: ${report.conflicts.size}")),
+                Tag("p", Text("conflict group count: ${report.conflictGroups.size}")),
                 *HtmlUtil.createTableWithElements(
-                    report.conflicts,
-                    listOf("Fully Qualified Name", "Versions"),
-                    { conflict ->
+                    report.conflictGroups.mapIndexed { index, group -> index + 1 to group },
+                    listOf("Group", "Classes", "Archives"),
+                    { (index, group) ->
                         listOf(
-                            HtmlUtil.anchor(
-                                conflict.fullyQualifiedName,
-                                "conflict-${conflict.fullyQualifiedName}.html"
-                            ),
-                            Text("${conflict.instances.size}")
+                            HtmlUtil.anchor("Group $index", "conflict-group-$index.html"),
+                            Text("${group.conflicts.size}"),
+                            Text("${group.artifacts.size}")
                         )
                     }
                 ).toTypedArray()
@@ -187,33 +290,38 @@ class ReportWriterImpl : ReportWriter {
         } else {
             Tag(
                 "body",
-                Tag("h1", Text("Conflicts")),
+                Tag("h1", Text("Conflict Groups")),
                 Tag("p", HtmlUtil.anchor("Table Of Contents", "index.html")),
                 Tag("p", Text("No conflicts detected!"))
             )
         }
 
-        val html = createHtmlPage("Conflicts", body)
+        val html = createHtmlPage("Conflict Groups", body)
         Files.write(browseDir.resolve("conflicts.html"), html.toLines())
     }
 
     private fun writeConflictDetailPages(report: ClassConflictReport, browseDir: Path) {
-        for (conflict in report.conflicts) {
+        for ((index, group) in report.conflictGroups.withIndex()) {
+            val groupNumber = index + 1
             val body = Tag(
                 "body",
-                Tag("h1", Text("Conflict: ${conflict.fullyQualifiedName}")),
-                Tag("p", HtmlUtil.anchor("Conflicts", "conflicts.html")),
-                Tag("p", Text("This class appears in ${conflict.instances.size} different versions:")),
+                Tag("h1", Text("Conflict Group $groupNumber")),
+                Tag("p", HtmlUtil.anchor("Conflict Groups", "conflicts.html")),
+                Tag("h2", Text("Archives (${group.artifacts.size})")),
                 *HtmlUtil.createTableWithText(
-                    conflict.instances,
-                    listOf("Artifact", "SHA-256 Hash"),
-                    { instance ->
-                        listOf(
-                            instance.artifact.toString(),
-                            instance.hash
-                        )
-                    }
+                    group.artifacts,
+                    listOf("Artifact Path"),
+                    { artifact -> listOf(artifact.toString()) }
                 ).toTypedArray(),
+                Tag("h2", Text("Classes (${group.conflicts.size})")),
+                *group.conflicts.flatMap { conflict ->
+                    listOf(Tag("h3", Text(conflict.fullyQualifiedName))) +
+                        HtmlUtil.createTableWithText(
+                            conflict.instances,
+                            listOf("Archive", "CRC-32 Hash"),
+                            { instance -> listOf(instance.artifact.toString(), instance.hash) }
+                        )
+                }.toTypedArray(),
                 Tag("h2", Text("Impact")),
                 Tag(
                     "p",
@@ -239,27 +347,34 @@ class ReportWriterImpl : ReportWriter {
                 )
             )
 
-            val html = createHtmlPage("Conflict: ${conflict.fullyQualifiedName}", body)
-            val fileName = "conflict-${conflict.fullyQualifiedName}.html"
+            val html = createHtmlPage("Conflict Group $groupNumber", body)
+            val fileName = "conflict-group-$groupNumber.html"
             Files.write(browseDir.resolve(fileName), html.toLines())
         }
     }
 
-    private fun formatConflictAsJson(conflict: ClassConflict): String {
+    private fun formatGroupsAsJson(groups: List<ConflictGroup>): String {
         return buildString {
-            appendLine("{")
-            appendLine("  \"fullyQualifiedName\" : \"${conflict.fullyQualifiedName}\",")
-            appendLine("  \"instances\" : [")
-            conflict.instances.forEachIndexed { index, instance ->
-                appendLine("    {")
-                appendLine("      \"artifact\" : \"${instance.artifact.fileName}\",")
-                appendLine("      \"hash\" : \"${instance.hash}\"")
-                append("    }")
-                if (index < conflict.instances.size - 1) appendLine(",")
-                else appendLine()
+            appendLine("[")
+            groups.forEachIndexed { groupIndex, group ->
+                appendLine("  {")
+                appendLine("    \"artifacts\" : [")
+                group.artifacts.forEachIndexed { index, artifact ->
+                    append("      \"$artifact\"")
+                    if (index < group.artifacts.size - 1) appendLine(",") else appendLine()
+                }
+                appendLine("    ],")
+                appendLine("    \"classNames\" : [")
+                group.conflicts.forEachIndexed { index, conflict ->
+                    append("      \"${conflict.fullyQualifiedName}\"")
+                    if (index < group.conflicts.size - 1) appendLine(",") else appendLine()
+                }
+                append("    ]")
+                appendLine()
+                append("  }")
+                if (groupIndex < groups.size - 1) appendLine(",") else appendLine()
             }
-            appendLine("  ]")
-            appendLine("}")
+            append("]")
         }
     }
 

@@ -5,6 +5,11 @@
     <dependencies>
         <dependency>
             <groupId>com.seanshubin.classconflict</groupId>
+            <artifactId>classconflict-duration-format</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.seanshubin.classconflict</groupId>
             <artifactId>classconflict-domain-api</artifactId>
             <version>${project.version}</version>
         </dependency>

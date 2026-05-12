@@ -2,6 +2,12 @@
 
 A quality metric tool that scans Maven artifacts (.jar and .zip files) for class files with the same fully qualified name but different bytecode.
 
+## AI Assistants
+We should try to keep reports consistent and aggregatable between these sibling projects that share the same parent directory:
+- code-structure
+- inversion-guard
+- class-conflict
+
 ## Purpose
 
 When multiple versions of the same class exist in your classpath with different bytecode, the JVM will load whichever one it encounters first, leading to unpredictable behavior. This tool helps identify such conflicts before they cause runtime issues.

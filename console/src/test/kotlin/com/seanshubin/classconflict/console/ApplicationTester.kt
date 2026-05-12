@@ -9,8 +9,8 @@ import java.util.jar.JarOutputStream
 
 class ApplicationTester {
     private val tempDir: Path = Files.createTempDirectory("class-conflict-test")
+    private val configBaseName: String = tempDir.resolve("test-config").toString()
     private val testIntegrations = TestIntegrations()
-    private val createdArtifacts = mutableListOf<Path>()
 
     fun createJarWithClass(jarName: String, className: String, classContent: ByteArray): Path {
         val jarPath = tempDir.resolve(jarName)
@@ -22,30 +22,50 @@ class ApplicationTester {
             jos.closeEntry()
         }
 
-        createdArtifacts.add(jarPath)
         return jarPath
     }
 
-    fun runApplication(artifacts: List<Path>): Int {
-        val args = artifacts.map { it.toString() }
-        val integrationsWithArgs = TestIntegrations(args)
+    fun runApplication(): Int {
+        writeConfig()
+        val integrationsWithArgs = TestIntegrations(listOf(configBaseName))
         val dependencies = ApplicationDependencies(integrationsWithArgs)
         val exitCode = dependencies.application.run()
-
         integrationsWithArgs.getOutput().forEach { testIntegrations.emitLine(it) }
-
         return exitCode
     }
 
-    fun getOutput(): List<String> = testIntegrations.getOutput()
+    fun runApplicationWithNoArgs(): Int {
+        writeConfig()
+        val integrationsWithArgs = TestIntegrations(emptyList())
+        val dependencies = ApplicationDependencies(integrationsWithArgs)
+        val exitCode = dependencies.application.run()
+        integrationsWithArgs.getOutput().forEach { testIntegrations.emitLine(it) }
+        return exitCode
+    }
 
     fun outputContains(text: String): Boolean {
         return testIntegrations.getOutputAsText().contains(text)
     }
 
     fun cleanup() {
-        createdArtifacts.forEach { Files.deleteIfExists(it) }
-        Files.deleteIfExists(tempDir)
+        deleteRecursively(tempDir)
+    }
+
+    private fun writeConfig() {
+        val configFile = Files.writeString(
+            tempDir.resolve("test-config-config.json"),
+            """{
+  "inputDir" : "${tempDir.toString().replace("\\", "\\\\")}",
+  "outputDir" : "${tempDir.resolve("output").toString().replace("\\", "\\\\")}"
+}"""
+        )
+    }
+
+    private fun deleteRecursively(path: Path) {
+        if (Files.isDirectory(path)) {
+            Files.list(path).use { stream -> stream.forEach { deleteRecursively(it) } }
+        }
+        Files.deleteIfExists(path)
     }
 
     companion object {

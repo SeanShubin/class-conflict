@@ -44,6 +44,7 @@
       "composition"
     ],
     "composition": [
+      "duration-format",
       "domain-api",
       "domain-impl",
       "di-delegate",
@@ -70,6 +71,7 @@
     "di-test": [
       "di-contract"
     ],
+    "duration-format": [],
     "zip": [],
     "html": [],
     "dynamic-core": [],
@@ -95,7 +97,8 @@
         "html": "html",
         "dynamic-core": "dynamic-core",
         "dynamic-json": "dynamic-json",
-        "file-selection": "file-selection"
+        "file-selection": "file-selection",
+        "duration-format": "duration-format"
       }
     }
   ],

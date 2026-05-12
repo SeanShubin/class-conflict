@@ -11,21 +11,27 @@ class ReportFormatterImpl : ReportFormatter {
         lines.add("=".repeat(80))
         lines.add("")
         lines.add("Classes scanned: ${report.classesScanned}")
-        lines.add("Conflicts found: ${report.conflicts.size}")
+        lines.add("Conflict groups found: ${report.conflictGroups.size}")
+        lines.add("Conflicting versions found: ${report.conflictingVersionsFound}")
         lines.add("")
 
         if (report.hasConflicts) {
-            lines.add("Conflicts:")
+            lines.add("Conflict Groups:")
             lines.add("-".repeat(80))
 
-            for (conflict in report.conflicts) {
+            for ((index, group) in report.conflictGroups.withIndex()) {
                 lines.add("")
-                lines.add("Class: ${conflict.fullyQualifiedName}")
-                lines.add("  Found in ${conflict.instances.size} different versions:")
-
-                for ((index, instance) in conflict.instances.withIndex()) {
-                    lines.add("    ${index + 1}. ${instance.artifact.fileName}")
-                    lines.add("       Hash: ${instance.hash}")
+                lines.add("Group ${index + 1}: ${group.conflicts.size} classes in ${group.artifacts.size} archives")
+                lines.add("  Archives:")
+                for ((i, artifact) in group.artifacts.withIndex()) {
+                    lines.add("    ${i + 1}. $artifact")
+                }
+                lines.add("  Classes:")
+                for (conflict in group.conflicts) {
+                    lines.add("    ${conflict.fullyQualifiedName}")
+                    for (instance in conflict.instances) {
+                        lines.add("      ${instance.artifact}  [${instance.hash}]")
+                    }
                 }
             }
         } else {

@@ -3,6 +3,7 @@ package com.seanshubin.classconflict.composition
 import com.seanshubin.classconflict.domain.api.ClassConflictDetector
 import com.seanshubin.classconflict.domain.api.ReportFormatter
 import com.seanshubin.classconflict.domain.api.ReportWriter
+import com.seanshubin.classconflict.duration.format.DurationFormat
 import com.seanshubin.classconflict.fileselection.FileChooser
 import com.seanshubin.classconflict.fileselection.FileSelection
 import java.nio.file.Files
@@ -16,6 +17,7 @@ class Application(
     private val reportWriter: ReportWriter
 ) {
     fun run(): Int {
+        val startTime = System.currentTimeMillis()
         val args = integrations.commandLineArguments()
         val configBaseName = if (args.isEmpty()) "class-conflict" else args[0]
 
@@ -58,7 +60,7 @@ class Application(
             return 1
         }
 
-        val report = classConflictDetector.detectConflicts(config, discoveredArtifacts)
+        val report = classConflictDetector.detectConflicts(config.copy(inputDir = inputDir), discoveredArtifacts)
 
         reportWriter.writeReports(report, config.outputDir)
 
@@ -70,9 +72,10 @@ class Application(
         integrations.emitLine("")
         integrations.emitLine("Detailed reports written to:")
         integrations.emitLine("  Count:  ${config.outputDir.resolve("count/quality-metrics.json")}")
-        integrations.emitLine("  Diff:   ${config.outputDir.resolve("diff/")}")
+        integrations.emitLine("  Diff:   ${config.outputDir.resolve("diff/quality-metrics-conflictGroups.json")}")
         integrations.emitLine("  Browse: ${config.outputDir.resolve("browse/")}")
 
+        integrations.emitLine("Time taken: ${DurationFormat.milliseconds.format(System.currentTimeMillis() - startTime)}")
         return if (report.hasConflicts) 1 else 0
     }
 }
