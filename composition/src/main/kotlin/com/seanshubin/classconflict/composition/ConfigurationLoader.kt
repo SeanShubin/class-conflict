@@ -2,7 +2,7 @@ package com.seanshubin.classconflict.composition
 
 import com.seanshubin.classconflict.composition.TypeUtil.coerceToListOfString
 import com.seanshubin.classconflict.composition.TypeUtil.coerceToPath
-import com.seanshubin.classconflict.di.delegate.FilesDelegate
+import com.seanshubin.classconflict.di.contract.FilesContract
 import com.seanshubin.classconflict.domain.api.Configuration
 import com.seanshubin.classconflict.domain.api.RegexPatterns
 import com.seanshubin.classconflict.dynamic.core.KeyValueStore
@@ -13,13 +13,12 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 class ConfigurationLoader(
-    private val integrations: Integrations,
-    private val configBaseName: String
+    private val files: FilesContract,
+    val configBaseName: String
 ) {
     fun load(): Configuration {
         val configFile = Paths.get("$configBaseName-config.json")
         val configDocumentationFile = Paths.get("$configBaseName-documentation.json")
-        val files = FilesDelegate.defaultInstance()
         val keyValueStore: KeyValueStore = JsonFileKeyValueStore(files, configFile)
         val documentationKeyValueStore: KeyValueStore =
             JsonFileKeyValueStore(files, configDocumentationFile)

@@ -1,6 +1,5 @@
 package com.seanshubin.classconflict.composition
 
-import com.seanshubin.classconflict.di.delegate.FilesDelegate
 import com.seanshubin.classconflict.domain.api.ClassConflictDetector
 import com.seanshubin.classconflict.domain.api.ClassScanner
 import com.seanshubin.classconflict.domain.api.ReportFormatter
@@ -15,14 +14,20 @@ import com.seanshubin.classconflict.fileselection.FileChooserImpl
 class ApplicationDependencies(
     private val integrations: Integrations
 ) {
-    val files = FilesDelegate.defaultInstance()
+    private val configBaseName = integrations.commandLineArguments()
+        .let { if (it.isEmpty()) "class-conflict" else it[0] }
+    val files = integrations.files
+    val configurationLoader = ConfigurationLoader(files, configBaseName)
     val fileChooser: FileChooser = FileChooserImpl(files)
     val classScanner: ClassScanner = ClassScannerImpl()
     val classConflictDetector: ClassConflictDetector = ClassConflictDetectorImpl(classScanner)
     val reportFormatter: ReportFormatter = ReportFormatterImpl()
-    val reportWriter: ReportWriter = ReportWriterImpl()
+    val reportWriter: ReportWriter = ReportWriterImpl(files, ApplicationDependencies::class.java.classLoader)
     val application: Application = Application(
-        integrations = integrations,
+        emitLine = integrations::emitLine,
+        files = files,
+        clock = integrations.clock,
+        configurationLoader = configurationLoader,
         fileChooser = fileChooser,
         classConflictDetector = classConflictDetector,
         reportFormatter = reportFormatter,

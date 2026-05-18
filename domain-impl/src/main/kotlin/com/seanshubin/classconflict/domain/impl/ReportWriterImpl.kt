@@ -1,5 +1,6 @@
 package com.seanshubin.classconflict.domain.impl
 
+import com.seanshubin.classconflict.di.contract.FilesContract
 import com.seanshubin.classconflict.domain.api.ClassConflictReport
 import com.seanshubin.classconflict.domain.api.ConflictGroup
 import com.seanshubin.classconflict.domain.api.ReportWriter
@@ -8,11 +9,12 @@ import com.seanshubin.classconflict.html.HtmlElement.Tag
 import com.seanshubin.classconflict.html.HtmlElement.Text
 import com.seanshubin.classconflict.html.HtmlUtil
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
 import java.nio.file.Path
 
-class ReportWriterImpl : ReportWriter {
-    private val classLoader = javaClass.classLoader
+class ReportWriterImpl(
+    private val files: FilesContract,
+    private val classLoader: ClassLoader
+) : ReportWriter {
 
     override fun writeReports(report: ClassConflictReport, outputDir: Path) {
         writeCountReport(report, outputDir)
@@ -22,7 +24,7 @@ class ReportWriterImpl : ReportWriter {
 
     private fun writeCountReport(report: ClassConflictReport, outputDir: Path) {
         val countDir = outputDir.resolve("count")
-        Files.createDirectories(countDir)
+        files.createDirectories(countDir)
 
         val json = buildString {
             appendLine("{")
@@ -33,21 +35,21 @@ class ReportWriterImpl : ReportWriter {
         }
 
         val countFile = countDir.resolve("quality-metrics.json")
-        Files.writeString(countFile, json)
+        files.writeString(countFile, json)
     }
 
     private fun writeDiffReports(report: ClassConflictReport, outputDir: Path) {
         val diffDir = outputDir.resolve("diff")
-        Files.createDirectories(diffDir)
+        files.createDirectories(diffDir)
         val json = formatGroupsAsJson(report.conflictGroups)
-        Files.writeString(diffDir.resolve("quality-metrics-conflictGroups.json"), json)
+        files.writeString(diffDir.resolve("quality-metrics-conflictGroups.json"), json)
     }
 
     private data class ArtifactStats(val artifact: Path, val groupCount: Int, val classCount: Int)
 
     private fun writeBrowseReports(report: ClassConflictReport, outputDir: Path) {
         val browseDir = outputDir.resolve("browse")
-        Files.createDirectories(browseDir)
+        files.createDirectories(browseDir)
 
         val groupsByArtifact: Map<Path, List<ConflictGroup>> = report.conflictGroups
             .flatMap { group -> group.artifacts.map { artifact -> artifact to group } }
@@ -95,7 +97,7 @@ class ReportWriterImpl : ReportWriter {
             </body>
             </html>
         """.trimIndent()
-        Files.writeString(browseDir.resolve("_index.html"), content)
+        files.writeString(browseDir.resolve("_index.html"), content)
     }
 
     private fun writeStaticContent(browseDir: Path) {
@@ -105,7 +107,7 @@ class ReportWriterImpl : ReportWriter {
             val inputStream = classLoader.getResourceAsStream(resourceName)
                 ?: throw RuntimeException("Unable to load resource named '$resourceName'")
             val content = inputStream.bufferedReader(StandardCharsets.UTF_8).readText()
-            Files.writeString(browseDir.resolve(cssFile), content)
+            files.writeString(browseDir.resolve(cssFile), content)
         }
     }
 
@@ -159,7 +161,7 @@ class ReportWriterImpl : ReportWriter {
         )
 
         val html = createHtmlPage("Class Conflict Report", body)
-        Files.write(browseDir.resolve("index.html"), html.toLines())
+        files.write(browseDir.resolve("index.html"), html.toLines())
     }
 
     private fun writeArtifactsPage(
@@ -189,7 +191,7 @@ class ReportWriterImpl : ReportWriter {
         )
 
         val html = createHtmlPage("Artifacts", body)
-        Files.write(browseDir.resolve("artifacts.html"), html.toLines())
+        files.write(browseDir.resolve("artifacts.html"), html.toLines())
     }
 
     private fun writeArtifactDetailPages(
@@ -220,7 +222,7 @@ class ReportWriterImpl : ReportWriter {
             )
 
             val html = createHtmlPage("Artifact: $artifact", body)
-            Files.write(browseDir.resolve("artifact-$idx.html"), html.toLines())
+            files.write(browseDir.resolve("artifact-$idx.html"), html.toLines())
         }
     }
 
@@ -265,7 +267,7 @@ class ReportWriterImpl : ReportWriter {
         )
 
         val html = createHtmlPage("Class Versions", body)
-        Files.write(browseDir.resolve("class-versions.html"), html.toLines())
+        files.write(browseDir.resolve("class-versions.html"), html.toLines())
     }
 
     private fun writeConflictsSummaryPage(report: ClassConflictReport, browseDir: Path) {
@@ -297,7 +299,7 @@ class ReportWriterImpl : ReportWriter {
         }
 
         val html = createHtmlPage("Conflict Groups", body)
-        Files.write(browseDir.resolve("conflicts.html"), html.toLines())
+        files.write(browseDir.resolve("conflicts.html"), html.toLines())
     }
 
     private fun writeConflictDetailPages(report: ClassConflictReport, browseDir: Path) {
@@ -349,7 +351,7 @@ class ReportWriterImpl : ReportWriter {
 
             val html = createHtmlPage("Conflict Group $groupNumber", body)
             val fileName = "conflict-group-$groupNumber.html"
-            Files.write(browseDir.resolve(fileName), html.toLines())
+            files.write(browseDir.resolve(fileName), html.toLines())
         }
     }
 
