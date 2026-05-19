@@ -10,11 +10,6 @@
         </dependency>
         <dependency>
             <groupId>com.seanshubin.classconflict</groupId>
-            <artifactId>classconflict-di-contract</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.seanshubin.classconflict</groupId>
             <artifactId>classconflict-zip</artifactId>
             <version>${project.version}</version>
         </dependency>
