@@ -5,11 +5,11 @@ import com.seanshubin.classconflict.di.contract.FilesContract
 import com.seanshubin.classconflict.di.delegate.FilesDelegate
 
 class TestIntegrations(
-    private val args: List<String> = emptyList()
+    private val args: Array<String> = emptyArray()
 ) : Integrations {
     private val outputLines = mutableListOf<String>()
 
-    override fun commandLineArguments(): List<String> = args
+    override fun commandLineArguments(): Array<String> = args
     override fun emitLine(line: String) { outputLines.add(line) }
     override val files: FilesContract = FilesDelegate.defaultInstance()
     override val clock: () -> Long = System::currentTimeMillis

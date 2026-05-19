@@ -12,10 +12,9 @@ import com.seanshubin.classconflict.fileselection.FileChooser
 import com.seanshubin.classconflict.fileselection.FileChooserImpl
 
 class ApplicationDependencies(
-    private val integrations: Integrations
+    private val integrations: Integrations,
+    private val configBaseName: String
 ) {
-    private val configBaseName = integrations.commandLineArguments()
-        .let { if (it.isEmpty()) "class-conflict" else it[0] }
     val files = integrations.files
     val configurationLoader = ConfigurationLoader(files, configBaseName)
     val fileChooser: FileChooser = FileChooserImpl(files)

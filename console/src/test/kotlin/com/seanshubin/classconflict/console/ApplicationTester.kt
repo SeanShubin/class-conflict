@@ -1,6 +1,6 @@
 package com.seanshubin.classconflict.console
 
-import com.seanshubin.classconflict.composition.ApplicationDependencies
+import com.seanshubin.classconflict.composition.Bootstrap
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
@@ -27,8 +27,8 @@ class ApplicationTester {
 
     fun runApplication(): Int {
         writeConfig()
-        val integrationsWithArgs = TestIntegrations(listOf(configBaseName))
-        val dependencies = ApplicationDependencies(integrationsWithArgs)
+        val integrationsWithArgs = TestIntegrations(arrayOf(configBaseName))
+        val dependencies = Bootstrap(integrationsWithArgs).createDependencies()
         val exitCode = dependencies.application.run()
         integrationsWithArgs.getOutput().forEach { testIntegrations.emitLine(it) }
         return exitCode
@@ -36,8 +36,8 @@ class ApplicationTester {
 
     fun runApplicationWithNoArgs(): Int {
         writeConfig()
-        val integrationsWithArgs = TestIntegrations(emptyList())
-        val dependencies = ApplicationDependencies(integrationsWithArgs)
+        val integrationsWithArgs = TestIntegrations(emptyArray())
+        val dependencies = Bootstrap(integrationsWithArgs).createDependencies()
         val exitCode = dependencies.application.run()
         integrationsWithArgs.getOutput().forEach { testIntegrations.emitLine(it) }
         return exitCode
