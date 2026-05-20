@@ -84,7 +84,7 @@
     "file-selection": ["di-contract"]
   },
   "entryPoints": {
-    "console": "com.seanshubin.classconflict.console.MainKt"
+    "console": "com.seanshubin.classconflict.console.ClassConflictApp"
   },
   "sourceDependencies": [
     {

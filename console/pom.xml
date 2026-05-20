@@ -29,7 +29,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com.seanshubin.classconflict.console.MainKt</mainClass>
+                            <mainClass>com.seanshubin.classconflict.console.ClassConflictApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
