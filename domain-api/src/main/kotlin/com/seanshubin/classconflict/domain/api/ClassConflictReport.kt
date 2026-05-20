@@ -12,6 +12,15 @@ data class ClassConflictReport(
     val classesScanned: Int get() = allClasses.size
     val conflictingVersionsFound: Int
         get() = conflicts.sumOf { conflict -> conflict.instances.map { it.hash }.distinct().size }
+    val summary: Summary
+        get() = Summary(
+            mapOf(
+                ErrorType.CLASSES_SCANNED to ErrorSummaryItem(classesScanned, ErrorType.CLASSES_SCANNED.isPartOfTotal),
+                ErrorType.CONFLICTING_CLASSES to ErrorSummaryItem(conflicts.size, ErrorType.CONFLICTING_CLASSES.isPartOfTotal),
+                ErrorType.CONFLICT_GROUPS to ErrorSummaryItem(conflictGroups.size, ErrorType.CONFLICT_GROUPS.isPartOfTotal)
+            ),
+            configuration.errorLimit
+        )
     val conflictGroups: List<ConflictGroup>
         get() = conflicts
             .groupBy { conflict ->

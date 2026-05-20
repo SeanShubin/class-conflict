@@ -5,6 +5,13 @@ import java.nio.file.Paths
 
 object TypeUtil {
     fun Any?.coerceToString(): String = this as String
+    fun Any?.coerceToInt(): Int = when (this) {
+        is Int -> this
+        is Long -> this.toInt()
+        is Double -> this.toInt()
+        is String -> this.toInt()
+        else -> failCoerce(this, Int::class.java)
+    }
     fun Any?.coerceToListOfString(): List<String> = (this as List<*>).map { it as String }
     fun Any?.coerceToPath(): Path = when (this) {
         is String -> Paths.get(this)

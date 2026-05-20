@@ -5,7 +5,8 @@ import java.nio.file.Path
 data class Configuration(
     val inputDir: Path,
     val outputDir: Path,
-    val artifactFileRegexPatterns: RegexPatterns
+    val artifactFileRegexPatterns: RegexPatterns,
+    val errorLimit: Int = 0
 )
 
 data class RegexPatterns(

@@ -29,8 +29,8 @@ class ClassConflictDetectorTest {
         val exitCode = tester.runApplication()
 
         assertEquals(0, exitCode)
-        assertTrue(tester.outputContains("No conflicts detected"))
-        assertTrue(tester.outputContains("Classes scanned: 2"))
+        assertTrue(tester.outputContains("Total Errors: 0 of 0 errors allowed"))
+        assertTrue(tester.outputContains("Classes Scanned: 2"))
     }
 
     @Test
@@ -43,10 +43,8 @@ class ClassConflictDetectorTest {
         val exitCode = tester.runApplication()
 
         assertEquals(1, exitCode)
-        assertTrue(tester.outputContains("Conflict groups found: 1"))
-        assertTrue(tester.outputContains("com.example.MyClass"))
-        assertTrue(tester.outputContains("app1.jar"))
-        assertTrue(tester.outputContains("app2.jar"))
+        assertTrue(tester.outputContains("Conflicting Classes: 1 (counted as errors)"))
+        assertTrue(tester.outputContains("Total Errors: 1 of 0 errors allowed"))
     }
 
     @Test
@@ -59,8 +57,8 @@ class ClassConflictDetectorTest {
         val exitCode = tester.runApplication()
 
         assertEquals(0, exitCode)
-        assertTrue(tester.outputContains("No conflicts detected"))
-        assertTrue(tester.outputContains("Classes scanned: 2"))
+        assertTrue(tester.outputContains("Total Errors: 0 of 0 errors allowed"))
+        assertTrue(tester.outputContains("Classes Scanned: 2"))
     }
 
     @Test

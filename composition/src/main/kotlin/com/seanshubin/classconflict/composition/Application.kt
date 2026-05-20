@@ -68,13 +68,8 @@ class Application(
             emitLine(line)
         }
 
-        emitLine("")
-        emitLine("Detailed reports written to:")
-        emitLine("  Count:  ${config.outputDir.resolve("count/quality-metrics.json")}")
-        emitLine("  Diff:   ${config.outputDir.resolve("diff/quality-metrics-conflictGroups.json")}")
-        emitLine("  Browse: ${config.outputDir.resolve("browse/")}")
-
+        emitLine("Output: ${config.outputDir}")
         emitLine("Time taken: ${DurationFormat.milliseconds.format(clock() - startTime)}")
-        return if (report.hasConflicts) 1 else 0
+        return if (report.summary.isOverLimit) 1 else 0
     }
 }

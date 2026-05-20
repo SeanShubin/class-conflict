@@ -1,5 +1,6 @@
 package com.seanshubin.classconflict.composition
 
+import com.seanshubin.classconflict.composition.TypeUtil.coerceToInt
 import com.seanshubin.classconflict.composition.TypeUtil.coerceToListOfString
 import com.seanshubin.classconflict.composition.TypeUtil.coerceToPath
 import com.seanshubin.classconflict.di.contract.FilesContract
@@ -81,10 +82,20 @@ class ConfigurationLoader(
             exclude = artifactFileExcludeRegexPatterns
         )
 
+        val errorLimit = config.load(
+            listOf("errorLimit"),
+            0,
+            listOf(
+                "Maximum number of conflicting classes allowed before reporting failure",
+                "Default: 0 (any conflict is a failure)"
+            )
+        ).coerceToInt()
+
         return Configuration(
             inputDir = inputDir,
             outputDir = outputDir,
-            artifactFileRegexPatterns = artifactFileRegexPatterns
+            artifactFileRegexPatterns = artifactFileRegexPatterns,
+            errorLimit = errorLimit
         )
     }
 }
