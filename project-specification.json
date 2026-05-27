@@ -103,5 +103,6 @@
     }
   ],
   "javaVersion": "25",
-  "exports": []
+  "exports": [],
+  "generateCodeStructure": true
 }
