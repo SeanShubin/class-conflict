@@ -1,108 +1,74 @@
 {
-  "prefix": [
-    "com",
-    "seanshubin"
-  ],
-  "name": [
-    "classconflict"
-  ],
-  "description": "Scans Maven artifacts for class files with the same fully qualified name but different bytecode",
-  "version": "1.0.0",
-  "language": "kotlin",
-  "developer": {
-    "name": "Sean Shubin",
-    "githubName": "SeanShubin",
-    "mavenUserName": "SeanShubin",
-    "organization": "Sean Shubin",
-    "url": "http://seanshubin.com/"
+  "prefix" : [ "com", "seanshubin" ],
+  "name" : [ "classconflict" ],
+  "description" : "Scans Maven artifacts for class files with the same fully qualified name but different bytecode",
+  "version" : "1.0.0",
+  "language" : "kotlin",
+  "developer" : {
+    "name" : "Sean Shubin",
+    "githubName" : "SeanShubin",
+    "mavenUserName" : "SeanShubin",
+    "organization" : "Sean Shubin",
+    "url" : "http://seanshubin.com/"
   },
-  "dependencies": {
-    "stdlib": {
-      "group": "org.jetbrains.kotlin",
-      "artifact": "kotlin-stdlib"
+  "dependencies" : {
+    "stdlib" : {
+      "group" : "org.jetbrains.kotlin",
+      "artifact" : "kotlin-stdlib"
     },
-    "test": {
-      "group": "org.jetbrains.kotlin",
-      "artifact": "kotlin-test-junit",
-      "scope": "test"
+    "test" : {
+      "group" : "org.jetbrains.kotlin",
+      "artifact" : "kotlin-test-junit",
+      "scope" : "test"
     },
-    "jackson": {
-      "group": "com.fasterxml.jackson.module",
-      "artifact": "jackson-module-kotlin"
+    "jackson" : {
+      "group" : "com.fasterxml.jackson.module",
+      "artifact" : "jackson-module-kotlin"
     },
-    "jackson-time": {
-      "group": "com.fasterxml.jackson.datatype",
-      "artifact": "jackson-datatype-jsr310"
+    "jackson-time" : {
+      "group" : "com.fasterxml.jackson.datatype",
+      "artifact" : "jackson-datatype-jsr310"
     }
   },
-  "global": [
-    "stdlib",
-    "test"
-  ],
-  "modules": {
-    "console": [
-      "composition"
-    ],
-    "composition": [
-      "duration-format",
-      "domain-api",
-      "domain-impl",
-      "di-delegate",
-      "dynamic-core",
-      "dynamic-json",
-      "file-selection"
-    ],
-    "domain-api": [
-      "di-contract"
-    ],
-    "domain-impl": [
-      "domain-api",
-      "zip",
-      "html"
-    ],
-    "domain-test": [
-      "domain-api",
-      "di-test"
-    ],
-    "di-contract": [],
-    "di-delegate": [
-      "di-contract"
-    ],
-    "di-test": [
-      "di-contract"
-    ],
-    "duration-format": [],
-    "zip": [],
-    "html": [],
-    "dynamic-core": [],
-    "dynamic-json": [
-      "dynamic-core",
-      "di-delegate",
-      "jackson",
-      "jackson-time"
-    ],
-    "file-selection": ["di-contract"]
+  "global" : [ "stdlib", "test" ],
+  "modules" : {
+    "console" : [ "composition" ],
+    "composition" : [ "duration-format", "domain-api", "domain-impl", "di-delegate", "dynamic-core", "dynamic-json", "file-selection" ],
+    "domain-api" : [ "di-contract" ],
+    "domain-impl" : [ "domain-api", "zip", "html" ],
+    "domain-test" : [ "domain-api", "di-test" ],
+    "di-contract" : [ ],
+    "di-delegate" : [ "di-contract" ],
+    "di-test" : [ "di-contract" ],
+    "duration-format" : [ ],
+    "zip" : [ ],
+    "html" : [ ],
+    "dynamic-core" : [ ],
+    "dynamic-json" : [ "dynamic-core", "di-delegate", "jackson", "jackson-time" ],
+    "file-selection" : [ "di-contract" ]
   },
-  "entryPoints": {
-    "console": "com.seanshubin.classconflict.console.ClassConflictApp"
+  "entryPoints" : {
+    "console" : "com.seanshubin.classconflict.console.ClassConflictApp"
   },
-  "sourceDependencies": [
-    {
-      "sourceProjectPath": "/Users/seashubi/github.com/SeanShubin/kotlin-reusable",
-      "moduleMapping": {
-        "di-contract": "di-contract",
-        "di-delegate": "di-delegate",
-        "di-test": "di-test",
-        "zip": "zip",
-        "html": "html",
-        "dynamic-core": "dynamic-core",
-        "dynamic-json": "dynamic-json",
-        "file-selection": "file-selection",
-        "duration-format": "duration-format"
-      }
+  "sourceDependencies" : [ {
+    "sourceProjectPath" : "/Users/seashubi/github.com/SeanShubin/kotlin-reusable",
+    "moduleMapping" : {
+      "di-contract" : "di-contract",
+      "di-delegate" : "di-delegate",
+      "di-test" : "di-test",
+      "zip" : "zip",
+      "html" : "html",
+      "dynamic-core" : "dynamic-core",
+      "dynamic-json" : "dynamic-json",
+      "file-selection" : "file-selection",
+      "duration-format" : "duration-format"
     }
-  ],
-  "javaVersion": "25",
-  "exports": [],
-  "generateCodeStructure": true
+  } ],
+  "javaVersion" : "25",
+  "exports" : [ ],
+  "generateCodeStructure" : true,
+  "versionOverrides" : [ ],
+  "mavenPlugin" : [ ],
+  "gradlePlugin" : [ ],
+  "publishToMavenCentral" : false
 }
